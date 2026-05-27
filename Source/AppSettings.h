@@ -27,14 +27,19 @@ public:
     bool isDarkMode() const;
     void setDarkMode (bool dark);
 
+    // ── Rotation step ─────────────────────────────────────────────────────────
+    float getRotationStep() const;
+    void  setRotationStep (float degrees);
+
 private:
     AppSettings() = default;
 
     std::unique_ptr<juce::ApplicationProperties> appProperties;
 
     juce::String fontName;
-    float        fontSize { 14.0f };
-    bool         darkMode { false };
+    float        fontSize      { 14.0f };
+    bool         darkMode      { false };
+    float        rotationStep  { 5.0f };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AppSettings)
 };

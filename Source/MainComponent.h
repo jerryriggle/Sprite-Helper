@@ -41,6 +41,8 @@ private:
     juce::ComboBox fontPicker;
     juce::Label    darkLabel   { {}, "Dark Mode:" };
     juce::ToggleButton darkToggle { "Enabled" };
+    juce::Label    rotStepLabel { {}, "Rotation Step (°):" };
+    juce::TextEditor rotStepEditor;
     juce::TextButton   closeButton { "Close" };
 
     juce::Component* parentWindow { nullptr };
@@ -98,6 +100,9 @@ private:
     void handleScaleKeep();
     void handleCenterImage();
     void handleSetMargin();
+    void handleRotateLeft();
+    void handleRotateRight();
+    void handleRemoveBackground();
     void handleOpenProject();
     void handleNewProject();
     void handleSaveProject();

@@ -1,8 +1,9 @@
 #include "AppSettings.h"
 
-static const char* kFontNameKey  = "fontName";
-static const char* kFontSizeKey  = "fontSize";
-static const char* kDarkModeKey  = "darkMode";
+static const char* kFontNameKey      = "fontName";
+static const char* kFontSizeKey      = "fontSize";
+static const char* kDarkModeKey      = "darkMode";
+static const char* kRotationStepKey  = "rotationStep";
 
 //==============================================================================
 AppSettings& AppSettings::getInstance()
@@ -23,9 +24,10 @@ void AppSettings::initialise()
 
     auto* props = appProperties->getUserSettings();
 
-    fontName = props->getValue (kFontNameKey, juce::Font().getTypefaceName());
-    fontSize = (float) props->getDoubleValue (kFontSizeKey, 14.0);
-    darkMode = props->getBoolValue (kDarkModeKey, false);
+    fontName     = props->getValue (kFontNameKey, juce::Font().getTypefaceName());
+    fontSize     = (float) props->getDoubleValue (kFontSizeKey, 14.0);
+    darkMode     = props->getBoolValue (kDarkModeKey, false);
+    rotationStep = (float) props->getDoubleValue (kRotationStepKey, 5.0);
 }
 
 void AppSettings::shutdown()
@@ -60,6 +62,21 @@ juce::String AppSettings::getFontName() const  { return fontName; }
 void AppSettings::setFontByName (const juce::String& name)
 {
     setFont (juce::Font (juce::FontOptions{}.withName (name).withHeight (fontSize)));
+}
+
+//==============================================================================
+float AppSettings::getRotationStep() const { return rotationStep; }
+
+void AppSettings::setRotationStep (float degrees)
+{
+    rotationStep = juce::jlimit (1.0f, 90.0f, degrees);
+
+    if (auto* props = appProperties->getUserSettings())
+    {
+        props->setValue (kRotationStepKey, (double) rotationStep);
+        props->saveIfNeeded();
+    }
+    sendChangeMessage();
 }
 
 //==============================================================================

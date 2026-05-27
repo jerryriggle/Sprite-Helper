@@ -116,6 +116,16 @@ RefineToolbar::RefineToolbar (RefineComponent& owner_) : owner (owner_)
     addAndMakeVisible (zoomOutButton);
     zoomOutButton.onClick = [this] { owner.zoomOut(); };
 
+    // Rotate left/right — Unicode arrow characters
+    rotateLeftButton .setButtonText (juce::String (juce::CharPointer_UTF8 ("\xe2\x86\xba")));
+    rotateRightButton.setButtonText (juce::String (juce::CharPointer_UTF8 ("\xe2\x86\xbb")));
+    rotateLeftButton .setTooltip ("Rotate left  (hold Shift to snap to 45°)");
+    rotateRightButton.setTooltip ("Rotate right (hold Shift to snap to 45°)");
+    rotateLeftButton .onClick = [this] { onRotateLeft();  };
+    rotateRightButton.onClick = [this] { onRotateRight(); };
+    addAndMakeVisible (rotateLeftButton);
+    addAndMakeVisible (rotateRightButton);
+
     addAndMakeVisible (imageSelector);
     imageSelector.onChange = [this] { onImageSelectorChanged(); };
 
@@ -151,30 +161,36 @@ void RefineToolbar::resized()
     const int wideW  = 80;
     const int comboW = 180;
 
-    dimensionsLabel .setBounds (area.removeFromLeft (100));
+    dimensionsLabel  .setBounds (area.removeFromLeft (100));
     area.removeFromLeft (gap);
 
-    alignmentButton .setBounds (area.removeFromLeft (24).withHeight (24).withY (area.getY() + (btnH - 24) / 2));
+    alignmentButton  .setBounds (area.removeFromLeft (24).withHeight (24)
+                                     .withY (area.getY() + (btnH - 24) / 2));
     area.removeFromLeft (gap);
 
-    zoomOutButton   .setBounds (area.removeFromLeft (btnW));
+    zoomOutButton    .setBounds (area.removeFromLeft (btnW));
     area.removeFromLeft (2);
-    zoomInButton    .setBounds (area.removeFromLeft (btnW));
-    area.removeFromLeft (gap * 2);
-
-    imageSelector   .setBounds (area.removeFromLeft (comboW));
-    area.removeFromLeft (gap * 2);
-
-    centerButton    .setBounds (area.removeFromLeft (wideW));
+    zoomInButton     .setBounds (area.removeFromLeft (btnW));
     area.removeFromLeft (gap);
 
-    bullseyeButton  .setBounds (area.removeFromLeft (wideW + 10));
+    rotateLeftButton .setBounds (area.removeFromLeft (btnW));
+    area.removeFromLeft (2);
+    rotateRightButton.setBounds (area.removeFromLeft (btnW));
     area.removeFromLeft (gap * 2);
 
-    applyButton     .setBounds (area.removeFromLeft (wideW));
+    imageSelector    .setBounds (area.removeFromLeft (comboW));
+    area.removeFromLeft (gap * 2);
+
+    centerButton     .setBounds (area.removeFromLeft (wideW));
     area.removeFromLeft (gap);
 
-    updateButton    .setBounds (area.removeFromLeft (wideW));
+    bullseyeButton   .setBounds (area.removeFromLeft (wideW + 10));
+    area.removeFromLeft (gap * 2);
+
+    applyButton      .setBounds (area.removeFromLeft (wideW));
+    area.removeFromLeft (gap);
+
+    updateButton     .setBounds (area.removeFromLeft (wideW));
 }
 
 void RefineToolbar::populateImageSelector()
@@ -213,6 +229,20 @@ void RefineToolbar::onApply()
 void RefineToolbar::onUpdate()
 {
     owner.updateInSheet();
+}
+
+void RefineToolbar::onRotateLeft()
+{
+    bool snap = juce::ModifierKeys::getCurrentModifiers().isShiftDown();
+    float step = AppSettings::getInstance().getRotationStep();
+    owner.rotateImage (-step, snap);   // negative = counter-clockwise
+}
+
+void RefineToolbar::onRotateRight()
+{
+    bool snap = juce::ModifierKeys::getCurrentModifiers().isShiftDown();
+    float step = AppSettings::getInstance().getRotationStep();
+    owner.rotateImage (+step, snap);   // positive = clockwise
 }
 
 void RefineToolbar::onAlignmentClicked()
@@ -274,20 +304,34 @@ void RefineToolbar::refresh()
     // Image selector
     populateImageSelector();
 
-    // Update button visibility
-    bool needsUpdate = entry && entry->isApplied && entry->isModifiedSinceApply;
+    // Update button — orange when modified (but NOT when only rotated, since
+    // rotation always goes to a new cell rather than updating in place)
+    bool needsUpdate = entry && entry->isApplied
+                       && entry->isModifiedSinceApply
+                       && ! entry->isRotatedSinceApply;
     updateButton.setEnabled (needsUpdate);
     updateButton.setColour (juce::TextButton::buttonColourId,
                             needsUpdate ? juce::Colours::orange
                                         : findColour (juce::TextButton::buttonColourId));
 
+    // Rotate buttons — tint when image has been rotated since last apply
+    bool isRotated = entry && entry->isRotatedSinceApply;
+    rotateLeftButton .setColour (juce::TextButton::buttonColourId,
+                                 isRotated ? juce::Colours::cornflowerblue.withAlpha (0.6f)
+                                           : findColour (juce::TextButton::buttonColourId));
+    rotateRightButton.setColour (juce::TextButton::buttonColourId,
+                                 isRotated ? juce::Colours::cornflowerblue.withAlpha (0.6f)
+                                           : findColour (juce::TextButton::buttonColourId));
+    rotateLeftButton .setEnabled (entry != nullptr && entry->image.isValid());
+    rotateRightButton.setEnabled (entry != nullptr && entry->image.isValid());
+
     // Apply button
     applyButton.setEnabled (entry != nullptr && entry->image.isValid());
 
-    // Highlight applied image in dropdown
-    // (ComboBox doesn't support per-item colours natively, but we can
-    //  indicate state via the label)
-    if (entry && entry->isApplied && !entry->isModifiedSinceApply)
+    // Show "New Cell" on apply when rotated (to hint that it will go to a new slot)
+    if (entry && entry->isApplied && entry->isRotatedSinceApply)
+        applyButton.setButtonText ("New Cell");
+    else if (entry && entry->isApplied && ! entry->isModifiedSinceApply)
         applyButton.setButtonText ("Re-Apply");
     else
         applyButton.setButtonText ("Apply");
@@ -374,6 +418,11 @@ void RefineComponent::zoomOut() { canvas.zoomOut(); }
 void RefineComponent::toggleBullseye()
 {
     canvas.setBullseyeVisible (! canvas.isBullseyeVisible());
+}
+
+void RefineComponent::rotateImage (float deltaDegrees, bool snapTo45)
+{
+    ProjectState::getInstance().rotateCurrentImage (deltaDegrees, snapTo45);
 }
 
 void RefineComponent::centerSubject()

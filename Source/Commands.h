@@ -17,6 +17,9 @@ namespace CommandIDs
     inline constexpr juce::CommandID scaleKeep         = 0x2021;
     inline constexpr juce::CommandID centerImage       = 0x2022;
     inline constexpr juce::CommandID setMargin         = 0x2023;
+    inline constexpr juce::CommandID rotateLeft        = 0x2024;
+    inline constexpr juce::CommandID rotateRight       = 0x2025;
+    inline constexpr juce::CommandID removeBackground  = 0x2026;
 
     // Project menu
     inline constexpr juce::CommandID openProject       = 0x2030;

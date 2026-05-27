@@ -45,11 +45,12 @@ SettingsComponent::SettingsComponent (juce::Component* parent)
     addAndMakeVisible (fontPicker);
     addAndMakeVisible (darkLabel);
     addAndMakeVisible (darkToggle);
+    addAndMakeVisible (rotStepLabel);
+    addAndMakeVisible (rotStepEditor);
     addAndMakeVisible (closeButton);
 
     // Populate font list
-    juce::StringArray fonts;
-    fonts = juce::Font::findAllTypefaceNames();
+    juce::StringArray fonts = juce::Font::findAllTypefaceNames();
     for (int i = 0; i < fonts.size(); ++i)
         fontPicker.addItem (fonts[i], i + 1);
 
@@ -74,13 +75,27 @@ SettingsComponent::SettingsComponent (juce::Component* parent)
         AppSettings::getInstance().setDarkMode (darkToggle.getToggleState());
     };
 
+    // Rotation step editor
+    rotStepEditor.setText (juce::String (AppSettings::getInstance().getRotationStep(), 1));
+    rotStepEditor.setInputRestrictions (5, "0123456789.");
+    rotStepEditor.onReturnKey = [this]
+    {
+        float v = rotStepEditor.getText().getFloatValue();
+        AppSettings::getInstance().setRotationStep (v);
+    };
+    rotStepEditor.onFocusLost = [this]
+    {
+        float v = rotStepEditor.getText().getFloatValue();
+        AppSettings::getInstance().setRotationStep (v);
+    };
+
     closeButton.onClick = [this]
     {
         if (parentWindow != nullptr)
             delete parentWindow;
     };
 
-    setSize (360, 180);
+    setSize (360, 224);
 }
 
 void SettingsComponent::paint (juce::Graphics& g)
@@ -91,18 +106,25 @@ void SettingsComponent::paint (juce::Graphics& g)
 void SettingsComponent::resized()
 {
     auto area = getLocalBounds().reduced (16);
-    const int rowH = 32;
-    const int gap  = 8;
+    const int rowH   = 32;
+    const int gap    = 8;
+    const int labelW = 130;
 
     auto row1 = area.removeFromTop (rowH);
-    fontLabel.setBounds (row1.removeFromLeft (80));
+    fontLabel.setBounds (row1.removeFromLeft (labelW));
     fontPicker.setBounds (row1);
 
     area.removeFromTop (gap);
 
     auto row2 = area.removeFromTop (rowH);
-    darkLabel.setBounds (row2.removeFromLeft (80));
+    darkLabel.setBounds (row2.removeFromLeft (labelW));
     darkToggle.setBounds (row2);
+
+    area.removeFromTop (gap);
+
+    auto row3 = area.removeFromTop (rowH);
+    rotStepLabel.setBounds (row3.removeFromLeft (labelW));
+    rotStepEditor.setBounds (row3.removeFromLeft (60));
 
     area.removeFromTop (gap * 2);
     closeButton.setBounds (area.removeFromTop (rowH).withSizeKeepingCentre (80, rowH - 4));
@@ -198,11 +220,16 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             break;
 
         case 2:  // Edit
-            menu.addCommandItem (&commandManager, CommandIDs::scaleFit,   "Scale (Fit)");
-            menu.addCommandItem (&commandManager, CommandIDs::scaleKeep,  "Scale (Keep)");
+            menu.addCommandItem (&commandManager, CommandIDs::scaleFit,          "Scale (Fit)");
+            menu.addCommandItem (&commandManager, CommandIDs::scaleKeep,         "Scale (Keep)");
             menu.addSeparator();
-            menu.addCommandItem (&commandManager, CommandIDs::centerImage, "Center");
-            menu.addCommandItem (&commandManager, CommandIDs::setMargin,   "Set Margin...");
+            menu.addCommandItem (&commandManager, CommandIDs::centerImage,       "Center");
+            menu.addCommandItem (&commandManager, CommandIDs::setMargin,         "Set Margin...");
+            menu.addSeparator();
+            menu.addCommandItem (&commandManager, CommandIDs::rotateLeft,        "Rotate Left");
+            menu.addCommandItem (&commandManager, CommandIDs::rotateRight,       "Rotate Right");
+            menu.addSeparator();
+            menu.addCommandItem (&commandManager, CommandIDs::removeBackground,  "Remove Background");
             break;
 
         case 3:  // Project
@@ -257,6 +284,9 @@ void MainComponent::getAllCommands (juce::Array<juce::CommandID>& commands)
         CommandIDs::scaleKeep,
         CommandIDs::centerImage,
         CommandIDs::setMargin,
+        CommandIDs::rotateLeft,
+        CommandIDs::rotateRight,
+        CommandIDs::removeBackground,
         CommandIDs::openProject,
         CommandIDs::newProject,
         CommandIDs::saveProject,
@@ -313,6 +343,21 @@ void MainComponent::getCommandInfo (juce::CommandID id,
             result.setInfo ("Set Margin...", "Apply a margin around the subject", "Edit", 0);
             result.setActive (hasImage);
             break;
+        case CommandIDs::rotateLeft:
+            result.setInfo ("Rotate Left", "Rotate image counter-clockwise by rotation step", "Edit", 0);
+            result.addDefaultKeypress ('[', juce::ModifierKeys::commandModifier);
+            result.setActive (hasImage);
+            break;
+        case CommandIDs::rotateRight:
+            result.setInfo ("Rotate Right", "Rotate image clockwise by rotation step", "Edit", 0);
+            result.addDefaultKeypress (']', juce::ModifierKeys::commandModifier);
+            result.setActive (hasImage);
+            break;
+        case CommandIDs::removeBackground:
+            result.setInfo ("Remove Background", "Flood-fill remove the solid background colour", "Edit", 0);
+            result.addDefaultKeypress ('B', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier);
+            result.setActive (hasImage);
+            break;
         case CommandIDs::openProject:
             result.setInfo ("Open Project...", "Open a saved project", "Project", 0);
             break;
@@ -367,6 +412,9 @@ bool MainComponent::perform (const juce::ApplicationCommandTarget::InvocationInf
         case CommandIDs::scaleKeep:         handleScaleKeep();         return true;
         case CommandIDs::centerImage:       handleCenterImage();       return true;
         case CommandIDs::setMargin:         handleSetMargin();         return true;
+        case CommandIDs::rotateLeft:        handleRotateLeft();        return true;
+        case CommandIDs::rotateRight:       handleRotateRight();       return true;
+        case CommandIDs::removeBackground:  handleRemoveBackground();  return true;
         case CommandIDs::openProject:       handleOpenProject();       return true;
         case CommandIDs::newProject:        handleNewProject();        return true;
         case CommandIDs::saveProject:       handleSaveProject();       return true;
@@ -546,6 +594,53 @@ void MainComponent::handleSetMargin()
 }
 
 //==============================================================================
+// Rotate / Remove Background commands
+//==============================================================================
+void MainComponent::handleRotateLeft()
+{
+    auto& ps = ProjectState::getInstance();
+    if (ps.getCurrentEntry() == nullptr) return;
+
+    bool snap = juce::ModifierKeys::getCurrentModifiers().isShiftDown();
+    float step = AppSettings::getInstance().getRotationStep();
+    ps.rotateCurrentImage (-step, snap);
+    ps.setStatusText (juce::String ("Rotated left ") + juce::String (step, 1) + juce::String (juce::CharPointer_UTF8 ("\xc2\xb0")));
+}
+
+void MainComponent::handleRotateRight()
+{
+    auto& ps = ProjectState::getInstance();
+    if (ps.getCurrentEntry() == nullptr) return;
+
+    bool snap = juce::ModifierKeys::getCurrentModifiers().isShiftDown();
+    float step = AppSettings::getInstance().getRotationStep();
+    ps.rotateCurrentImage (+step, snap);
+    ps.setStatusText (juce::String ("Rotated right ") + juce::String (step, 1) + juce::String (juce::CharPointer_UTF8 ("\xc2\xb0")));
+}
+
+void MainComponent::handleRemoveBackground()
+{
+    auto& ps = ProjectState::getInstance();
+    const auto* entry = ps.getCurrentEntry();
+    if (entry == nullptr || ! entry->image.isValid()) return;
+
+    juce::AlertWindow dlg ("Remove Background",
+                           "Set colour tolerance (0 = exact match, 100 = very broad):",
+                           juce::MessageBoxIconType::QuestionIcon);
+    dlg.addTextEditor ("tol", "30", "Tolerance:");
+    dlg.addButton ("Remove", 1);
+    dlg.addButton ("Cancel", 0);
+
+    if (dlg.runModalLoop() == 1)
+    {
+        float tol = dlg.getTextEditorContents ("tol").getFloatValue();
+        // Scale tolerance from 0–100 user-friendly range to 0–441 Euclidean space
+        float euclidean = tol * 4.41f;
+        ps.removeCurrentImageBackground (euclidean);
+    }
+}
+
+//==============================================================================
 // Project commands
 //==============================================================================
 void MainComponent::handleNewProject()
@@ -666,22 +761,25 @@ void MainComponent::handleSetSpritesheetSize()
     auto& ps = ProjectState::getInstance();
 
     juce::AlertWindow dlg ("Set Spritesheet Size",
-                           "Set the number of cells (columns x rows).",
+                           "Set the total number of cells and the column count.\n"
+                           "Incomplete last rows are padded with greyed-out cells.",
                            juce::MessageBoxIconType::QuestionIcon);
 
-    dlg.addTextEditor ("cols", juce::String (ps.getNumCols()), "Columns:");
-    dlg.addTextEditor ("rows", juce::String (ps.getNumRows()), "Rows:");
+    dlg.addTextEditor ("cells", juce::String (ps.getNumCells()),  "Total Cells:");
+    dlg.addTextEditor ("cols",  juce::String (ps.getNumCols()),   "Columns:");
     dlg.addButton ("OK",     1);
     dlg.addButton ("Cancel", 0);
 
     if (dlg.runModalLoop() == 1)
     {
-        int cols = dlg.getTextEditorContents ("cols").getIntValue();
-        int rows = dlg.getTextEditorContents ("rows").getIntValue();
-        cols = juce::jlimit (1, 32, cols);
-        rows = juce::jlimit (1, 32, rows);
-        ps.setSheetSize (cols, rows);
-        ps.setStatusText ("Spritesheet size: " + juce::String (cols) + " x " + juce::String (rows));
+        int cells = dlg.getTextEditorContents ("cells").getIntValue();
+        int cols  = dlg.getTextEditorContents ("cols").getIntValue();
+        cells = juce::jlimit (1, 1024, cells);
+        cols  = juce::jlimit (1, 32,   cols);
+        ps.setSheetSize (cols, cells);
+        int rows = ps.getNumRows();
+        ps.setStatusText ("Spritesheet: " + juce::String (cells) + " cells, "
+                          + juce::String (cols) + " cols, " + juce::String (rows) + " rows");
     }
 }
 

@@ -44,20 +44,24 @@ private:
     class RefineComponent& owner;
 
     juce::Label      dimensionsLabel;
-    juce::TextButton alignmentButton { "" };   ///< Shows alignment icon
-    juce::TextButton zoomInButton    { "+" };
-    juce::TextButton zoomOutButton   { "-" };
+    juce::TextButton alignmentButton  { "" };    ///< Alignment indicator / scale shortcut
+    juce::TextButton zoomInButton     { "+" };
+    juce::TextButton zoomOutButton    { "-" };
+    juce::TextButton rotateLeftButton;            ///< ↺  rotate CCW by rotation step
+    juce::TextButton rotateRightButton;           ///< ↻  rotate CW by rotation step
     juce::ComboBox   imageSelector;
-    juce::TextButton applyButton     { "Apply" };
-    juce::TextButton updateButton    { "Update" };
+    juce::TextButton centerButton     { "Center" };
     juce::ToggleButton bullseyeButton { "Bullseye" };
-    juce::TextButton centerButton    { "Center" };
+    juce::TextButton applyButton      { "Apply" };
+    juce::TextButton updateButton     { "Update" };
 
     void populateImageSelector();
     void onImageSelectorChanged();
     void onApply();
     void onUpdate();
     void onAlignmentClicked();
+    void onRotateLeft();
+    void onRotateRight();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RefineToolbar)
 };
@@ -79,6 +83,10 @@ public:
     void zoomOut();
     void toggleBullseye();
     void centerSubject();
+
+    /** Rotate the current image. deltaDegrees > 0 = clockwise.
+        snapTo45 rounds the cumulative total to nearest 45° increment.       */
+    void rotateImage (float deltaDegrees, bool snapTo45 = false);
 
     RefineCanvas& getCanvas() { return canvas; }
 
