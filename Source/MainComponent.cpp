@@ -820,19 +820,34 @@ REFINE PANEL
 The Refine toolbar shows:
   • Image dimensions  — current pixel size of the loaded image.
   • ✓ / ⚠ icon       — green if dimensions match the project scale; orange if not.
-                        Click to open a scale dialog.
+                        Click to open a scale dialog (Fit or Keep aspect ratio).
   • + / −            — Zoom the canvas in or out.
+  • ↺ / ↻            — Rotate the image left or right by the configured step (default 5°).
+                        Hold Shift while clicking to snap to the nearest 45°.
+                        Rotate buttons tint blue when the image has been rotated since
+                        the last Apply. The cumulative rotation resets after Apply.
   • Image selector   — Dropdown listing all loaded images. Applied images are noted.
   • Center           — Centers the visible subject within the image bounds.
   • Bullseye         — Toggle a crosshair overlay at the image centre.
   • Apply            — Copy the current image into the next free spritesheet cell.
+                        Shows "New Cell" when the image has been rotated since the last
+                        apply — the rotated version always goes to a fresh cell so the
+                        original orientation cell is preserved.
+                        Shows "Re-Apply" when the image is applied and unchanged.
   • Update           — Re-apply a modified image to its existing cell (highlighted
-                        in orange when the image is out of sync).
+                        in orange when the image has non-rotation changes). Rotation
+                        alone does not enable Update — use Apply (New Cell) instead.
 
 COMPILE PANEL
 Displays the sprite sheet as a grid. Each cell shows a thumbnail.
-Click a cell to select that image in the Refine view.
-The currently selected image's cell is outlined in blue; the last applied cell in gold.
+
+  • Click a cell      — Select that image in the Refine view.
+  • Drag a cell       — Drag a cell onto an empty slot to move it there, or onto an
+                        occupied slot to swap the two images.
+  • Padding cells     — Greyed-out cells filling any incomplete last row are not valid
+                        drag targets.
+  • Blue outline      — The cell belonging to the currently selected image.
+  • Gold outline      — The cell that was most recently applied.
 
 MENUS
 
@@ -847,26 +862,36 @@ Edit
   Scale (Keep)        Scale image to fit within the project scale, preserving ratio.
   Center              Move subject to the centre of the image canvas.
   Set Margin...       Scale the subject down to create a margin (enter 0–49 %).
+  Rotate Left         Rotate the current image left by the rotation step (Cmd+[).
+  Rotate Right        Rotate the current image right by the rotation step (Cmd+]).
+  Remove Background   Flood-fill from the image corners to remove the background
+                      colour, replacing it with transparency. A dialog asks for a
+                      tolerance value (0 = exact colour match, 100 = very loose).
 
 Project
-  New Project         Create a new blank project (8×8 sheet, 128×256 px scale).
+  New Project         Create a new blank project (64 cells, 8 cols, 128×256 px scale).
   Open Project...     Load a saved .spritehelper project file.
   Save Project...     Save the current project as a .spritehelper JSON file.
   Set Scale...        Choose the power-of-two width and height for each sprite cell.
-  Set Spritesheet Size... Choose the number of columns and rows in the sheet.
+  Set Spritesheet Size... Set the total cell count and column count. Rows are computed
+                      automatically; any incomplete final row is padded with grey cells.
 
 Sprite Helper
-  Settings            Change the application font and toggle dark mode.
+  Settings            Change the application font, toggle dark mode, and set the
+                      rotation step in degrees (1–90°, default 5°).
 
 KEYBOARD SHORTCUTS
-  Cmd+O    Load Image
-  Cmd+S    Save Image
-  Cmd+E    Export Spritesheet
-  Cmd+N    New Project
-  Cmd+⇧+S  Save Project
-  Cmd+1    Refine view
-  Cmd+2    Compile view
-  Cmd+3    Split view
+  Cmd+O      Load Image
+  Cmd+S      Save Image
+  Cmd+E      Export Spritesheet
+  Cmd+N      New Project
+  Cmd+⇧+S    Save Project
+  Cmd+[      Rotate Left  (hold Shift to snap to 45°)
+  Cmd+]      Rotate Right (hold Shift to snap to 45°)
+  Cmd+⇧+B    Remove Background
+  Cmd+1      Refine view
+  Cmd+2      Compile view
+  Cmd+3      Split view
 )doc";
 
     auto* win = new juce::DocumentWindow ("Documentation",

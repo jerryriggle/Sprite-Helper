@@ -17,8 +17,10 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 - Center the non-transparent subject automatically within the image bounds
 - Apply a margin percentage around the subject
 - Per-image dropdown selector; applied images are visually distinguished
-- **Apply** — copies the current image into the next free spritesheet cell
-- **Update** — highlighted in orange when an applied image has been modified; click to sync
+- **Rotate Left / Right** (↺ / ↻ toolbar buttons, or `Cmd+[` / `Cmd+]`) — rotate the current image by the configured step (default 5°); hold **Shift** to snap to the nearest 45°
+- **Apply** — copies the current image into the next free spritesheet cell; if the image has been rotated since the last apply, it always occupies a **new** cell so the original orientation is preserved
+- **Update** — highlighted in orange when an applied image has been modified (non-rotation changes); click to sync
+- **Remove Background** (`Cmd+Shift+B`) — flood-fill from all four corners using a configurable tolerance (0–100), replacing the background colour with transparency
 
 **Compile** — Compose and inspect the sprite sheet.
 
@@ -26,6 +28,8 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 - Thumbnail preview in every cell
 - Click any cell to select its image back in the Refine view
 - Currently-selected cell outlined in blue; last-applied cell outlined in gold
+- **Drag-and-drop rearrangement** — drag a cell onto an empty cell to move it, or onto an occupied cell to swap the two
+- Padding cells (greyed-out) fill any incomplete last row and cannot be dragged to
 
 **Split view** — Both panels side-by-side with a draggable divider (default).
 
@@ -36,11 +40,12 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 | Setting | Default |
 |---|---|
 | Sprite scale (W × H) | 128 × 256 px |
-| Sheet size (cols × rows) | 8 × 8 cells |
+| Total cells | 64 |
+| Columns | 8 |
 
 - **New / Open / Save project** — persisted as a `.spritehelper` JSON file that records image paths, applied cells, scale, and sheet dimensions
 - **Set Scale** — choose any power-of-two size from 16 to 4096 px; width and height set independently
-- **Set Spritesheet Size** — choose any column/row count up to 32 × 32
+- **Set Spritesheet Size** — specify **Total Cells** and **Columns**; the number of rows is computed automatically (`ceil(totalCells / columns)`); any incomplete final row is padded with greyed-out cells
 - **Export** — renders the full composite sprite sheet to a PNG file
 - **Load Spritesheet** — imports an existing sheet PNG, partitions it into cells by the current scale settings
 
@@ -52,6 +57,7 @@ Accessed via **Sprite Helper → Settings**:
 
 - **Font** — choose any installed system font
 - **Dark Mode** — toggle between a dark (Catppuccin-inspired) and light theme; settings persist across sessions
+- **Rotation Step (°)** — angle increment used by the Rotate Left / Right buttons (1–90°, default 5°)
 
 ---
 
@@ -106,6 +112,9 @@ open build-xcode/SpriteHelper.xcodeproj
 | Export Spritesheet | Cmd/Ctrl+E |
 | New Project | Cmd/Ctrl+N |
 | Save Project | Cmd/Ctrl+Shift+S |
+| Rotate Left | Cmd/Ctrl+[ |
+| Rotate Right | Cmd/Ctrl+] |
+| Remove Background | Cmd/Ctrl+Shift+B |
 | Refine view | Cmd/Ctrl+1 |
 | Compile view | Cmd/Ctrl+2 |
 | Split view | Cmd/Ctrl+3 |
