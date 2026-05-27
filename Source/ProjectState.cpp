@@ -346,6 +346,19 @@ bool ProjectState::saveProject (const juce::File& file)
         obj->setProperty ("file",      e.file.getFullPathName());
         obj->setProperty ("isApplied", e.isApplied);
         obj->setProperty ("cellIndex", e.cellIndex);
+
+        // Embed the actual (possibly edited) pixel data so that cells loaded
+        // from a spritesheet round-trip correctly (the file path alone points
+        // to the full sheet, not the individual cell).
+        if (e.image.isValid())
+        {
+            juce::MemoryOutputStream ms;
+            juce::PNGImageFormat png;
+            if (png.writeImageToStream (e.image, ms))
+                obj->setProperty ("imageData",
+                    juce::Base64::toBase64 (ms.getData(), ms.getDataSize()));
+        }
+
         imageArray.add (juce::var (obj.get()));
     }
     root->setProperty ("images", imageArray);
@@ -394,13 +407,30 @@ bool ProjectState::loadProject (const juce::File& file)
         for (const auto& item : *arr)
         {
             ImageEntry entry;
-            juce::File f (item.getProperty ("file", "").toString());
-            if (f.existsAsFile())
+            entry.file      = juce::File (item.getProperty ("file", "").toString());
+            entry.isApplied = (bool) item.getProperty ("isApplied", false);
+            entry.cellIndex = (int)  item.getProperty ("cellIndex", -1);
+
+            // Prefer the embedded pixel data (written by saveProject so that
+            // cells sliced from a spritesheet load back as individual tiles,
+            // not as the full sheet).  Fall back to the source file for
+            // project files saved by older versions.
+            juce::String b64 = item.getProperty ("imageData", "").toString();
+            if (b64.isNotEmpty())
             {
-                entry.file      = f;
-                entry.image     = juce::ImageFileFormat::loadFrom (f);
-                entry.isApplied = (bool) item.getProperty ("isApplied", false);
-                entry.cellIndex = (int)  item.getProperty ("cellIndex", -1);
+                juce::MemoryBlock mb;
+                juce::MemoryOutputStream mos (mb, false);
+                juce::Base64::convertFromBase64 (mos, b64);
+                juce::MemoryInputStream mis (mb.getData(), mb.getSize(), false);
+                entry.image = juce::ImageFileFormat::loadFrom (mis);
+            }
+            else if (entry.file.existsAsFile())
+            {
+                entry.image = juce::ImageFileFormat::loadFrom (entry.file);
+            }
+
+            if (entry.image.isValid())
+            {
                 if (entry.isApplied)
                     entry.appliedImage = entry.image;
                 images.add (entry);
