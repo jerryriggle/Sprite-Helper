@@ -919,6 +919,12 @@ File
   Export              Export the entire sprite sheet as a single PNG.
 
 Edit
+  Undo                Step back through up to 64 levels of history (Cmd+Z).
+                      Covers all image edits, rotations, apply/update, drag-and-drop
+                      rearrangements, background removal, scale and sheet-size changes,
+                      and spritesheet loads. History is cleared on project load or
+                      application restart and is never saved to disk.
+  Redo                Re-apply the most recently undone action (Cmd+⇧+Z).
   Scale (Fit)         Stretch/squash image to exactly match the project scale.
   Scale (Keep)        Scale image to fit within the project scale, preserving ratio.
   Center              Move subject to the centre of the image canvas.
@@ -948,6 +954,8 @@ Sprite Helper
                       rotation step in degrees (1–90°, default 5°).
 
 KEYBOARD SHORTCUTS
+  Cmd+Z      Undo
+  Cmd+⇧+Z    Redo
   Cmd+O      Load Image
   Cmd+S      Save Image
   Cmd+E      Export Spritesheet

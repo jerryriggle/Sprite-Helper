@@ -22,6 +22,8 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 - **Update** — highlighted in orange when an applied image has been modified (non-rotation changes); click to sync
 - **Remove Background** (`Cmd+Shift+B`) — flood-fill from all four corners using a configurable tolerance (0–100), replacing the background colour with transparency
 
+**Undo / Redo** — `Cmd+Z` / `Cmd+Shift+Z` steps back or forward through up to 64 levels of history. Every image edit, rotation, apply, drag-and-drop rearrangement, background removal, scale change, and spritesheet load is individually undoable. History is in-memory only and is cleared when a project is loaded or the application is restarted.
+
 **Compile** — Compose and inspect the sprite sheet.
 
 - Grid view with dotted cell dividers matching the project scale and sheet dimensions
@@ -131,6 +133,8 @@ open build-xcode/SpriteHelper.xcodeproj
 | Save Project | Cmd/Ctrl+Shift+S |
 | Rotate Left | Cmd/Ctrl+[ |
 | Rotate Right | Cmd/Ctrl+] |
+| Undo | Cmd/Ctrl+Z |
+| Redo | Cmd/Ctrl+Shift+Z |
 | Remove Background | Cmd/Ctrl+Shift+B |
 | Preview Animation | Cmd/Ctrl+Shift+P |
 | Refine view | Cmd/Ctrl+1 |
