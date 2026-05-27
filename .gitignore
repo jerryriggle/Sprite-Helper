@@ -1,0 +1,86 @@
+# ── Build directories ─────────────────────────────────────────────────────────
+build/
+build-*/
+out/
+cmake-build-*/
+
+# ── CMake generated files ─────────────────────────────────────────────────────
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+
+# ── JUCE FetchContent cache ───────────────────────────────────────────────────
+# (lives inside the build directory, but explicit just in case)
+*_artefacts/
+
+# ── Xcode ─────────────────────────────────────────────────────────────────────
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+DerivedData/
+*.hmap
+*.ipa
+
+# ── Visual Studio / MSBuild ───────────────────────────────────────────────────
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+x64/
+x86/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+*.dSYM/
+
+# ── Windows ───────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Application settings (user-local, not shared) ─────────────────────────────
+*.settings
+
+# ── Sprite Helper project files (user data, not source) ───────────────────────
+*.spritehelper
+
+# ── Compiled / generated binaries ─────────────────────────────────────────────
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.dylib
+*.so
+*.exe
+*.app
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.clangd/
+.cache/
+compile_commands.json
