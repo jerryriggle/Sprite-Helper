@@ -29,6 +29,10 @@ namespace CommandIDs
     inline constexpr juce::CommandID setSpritesheetSize= 0x2034;
     inline constexpr juce::CommandID previewAnimation  = 0x2035;
 
+    // Edit menu — undo / redo
+    inline constexpr juce::CommandID undoAction        = 0x2060;
+    inline constexpr juce::CommandID redoAction        = 0x2061;
+
     // View menu
     inline constexpr juce::CommandID viewRefine        = 0x2040;
     inline constexpr juce::CommandID viewCompile       = 0x2041;

@@ -112,6 +112,12 @@ public:
     /** Returns a composite spritesheet image (used in export and compile view). */
     juce::Image buildSpritesheetImage() const;
 
+    // ── Undo / Redo ───────────────────────────────────────────────────────────
+    bool canUndo() const;
+    bool canRedo() const;
+    void undo();
+    void redo();
+
     // ── Status text ───────────────────────────────────────────────────────────
     juce::String getStatusText() const { return statusText; }
     void         setStatusText (const juce::String& text);
@@ -135,6 +141,34 @@ private:
     juce::File   projectFile;
     bool         dirty { false };
     juce::String statusText;
+
+    // ── Undo / Redo internals ─────────────────────────────────────────────────
+    /** Snapshot of all mutable project data (images, cells, dimensions).
+        juce::Image is ref-counted so copying is cheap: the snapshot holds its
+        own reference to each image's pixel buffer, which is only duplicated if
+        the live image is later replaced. */
+    struct Snapshot
+    {
+        juce::Array<ImageEntry> images;
+        int                     currentImageIndex { -1 };
+        juce::Array<int>        cells;
+        int scaleW     { 128 };
+        int scaleH     { 256 };
+        int sheetCols  { 8 };
+        int totalCells { 64 };
+    };
+
+    /** Capture current state onto the undo stack and clear the redo stack.
+        Call this at the start of every mutating operation. */
+    void pushSnapshot();
+
+    /** Discard both stacks — called on new-project and project-load. */
+    void clearUndoHistory();
+
+    static constexpr int kMaxUndoLevels = 64;
+
+    std::vector<Snapshot> undoStack;   ///< past states; back() is the most recent
+    std::vector<Snapshot> redoStack;   ///< future states (populated by undo)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectState)
 };

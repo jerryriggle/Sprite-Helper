@@ -38,6 +38,8 @@ void ProjectState::addImage (const juce::File& file)
     if (! img.isValid())
         return;
 
+    pushSnapshot();
+
     ImageEntry entry;
     entry.file  = file;
     entry.image = img;
@@ -54,6 +56,8 @@ void ProjectState::replaceCurrentImage (const juce::Image& newImage)
     if (currentImageIndex < 0 || currentImageIndex >= images.size())
         return;
 
+    pushSnapshot();
+
     auto& entry = images.getReference (currentImageIndex);
     entry.image = newImage;
 
@@ -68,6 +72,8 @@ void ProjectState::removeImage (int index)
 {
     if (index < 0 || index >= images.size())
         return;
+
+    pushSnapshot();
 
     auto& entry = images.getReference (index);
     if (entry.isApplied && entry.cellIndex >= 0 && entry.cellIndex < cells.size())
@@ -133,6 +139,8 @@ void ProjectState::rotateCurrentImage (float deltaDegrees, bool snapTo45)
     if (std::abs (deltaDegrees) < 0.001f)
         return;
 
+    pushSnapshot();
+
     entry->image = ImageOps::rotateImage (entry->image, deltaDegrees);
     entry->cumulativeRotation += deltaDegrees;
     entry->isRotatedSinceApply = (std::abs (entry->cumulativeRotation) > 0.001f);
@@ -149,6 +157,8 @@ void ProjectState::removeCurrentImageBackground (float tolerance)
     auto* entry = getCurrentEntry();
     if (entry == nullptr || ! entry->image.isValid())
         return;
+
+    pushSnapshot();
 
     entry->image = ImageOps::removeBackground (entry->image, tolerance);
 
@@ -176,6 +186,8 @@ int ProjectState::applyCurrentImageToSheet()
     auto* entry = getCurrentEntry();
     if (entry == nullptr)
         return -1;
+
+    pushSnapshot();
 
     // Rotated images always go to a new free cell, releasing the old one
     if (entry->isRotatedSinceApply && entry->isApplied && entry->cellIndex >= 0)
@@ -216,6 +228,8 @@ void ProjectState::updateCurrentImageInSheet()
     if (entry == nullptr || !entry->isApplied || entry->cellIndex < 0)
         return;
 
+    pushSnapshot();
+
     cells.set (entry->cellIndex, currentImageIndex);
     entry->appliedImage           = entry->image;
     entry->isModifiedSinceApply   = false;
@@ -238,6 +252,8 @@ void ProjectState::clearCell (int cellIndex)
 {
     if (cellIndex < 0 || cellIndex >= cells.size())
         return;
+
+    pushSnapshot();
 
     int imgIdx = cells[cellIndex];
     if (imgIdx >= 0 && imgIdx < images.size())
@@ -262,6 +278,8 @@ void ProjectState::swapCells (int cellA, int cellB)
     if (cellA == cellB)
         return;
 
+    pushSnapshot();
+
     int imgA = cells[cellA];
     int imgB = cells[cellB];
 
@@ -283,6 +301,8 @@ void ProjectState::moveCellContent (int fromCell, int toCell)
         || fromCell >= cells.size() || toCell >= cells.size())
         return;
 
+    pushSnapshot();
+
     int imgIdx = cells[fromCell];
     cells.set (toCell,   imgIdx);
     cells.set (fromCell, -1);
@@ -299,6 +319,8 @@ void ProjectState::moveCellContent (int fromCell, int toCell)
 //==============================================================================
 void ProjectState::setScale (int w, int h)
 {
+    pushSnapshot();
+
     scaleW = w;
     scaleH = h;
     dirty = true;
@@ -307,6 +329,8 @@ void ProjectState::setScale (int w, int h)
 
 void ProjectState::setSheetSize (int cols, int total)
 {
+    pushSnapshot();
+
     sheetCols  = juce::jlimit (1, 32, cols);
     totalCells = juce::jlimit (1, 1024, total);
     cells.clear();
@@ -326,6 +350,7 @@ void ProjectState::newProject()
     scaleW     = 128;
     scaleH     = 256;
     reset();
+    clearUndoHistory();
     setStatusText ("New project");
     sendChangeMessage();
 }
@@ -387,6 +412,7 @@ bool ProjectState::loadProject (const juce::File& file)
         return false;
 
     reset();
+    clearUndoHistory();
 
     scaleW     = (int) root.getProperty ("scaleW",     128);
     scaleH     = (int) root.getProperty ("scaleH",     256);
@@ -502,6 +528,8 @@ bool ProjectState::loadSpritesheetFile (const juce::File& file)
     if (! sheet.isValid())
         return false;
 
+    pushSnapshot();
+
     images.clear();
     cells.clear();
     cells.resize (totalCells);
@@ -544,6 +572,101 @@ void ProjectState::setStatusText (const juce::String& text)
 {
     statusText = text;
     sendChangeMessage();
+}
+
+//==============================================================================
+// Undo / Redo
+//==============================================================================
+void ProjectState::pushSnapshot()
+{
+    Snapshot snap;
+    snap.images            = images;
+    snap.currentImageIndex = currentImageIndex;
+    snap.cells             = cells;
+    snap.scaleW            = scaleW;
+    snap.scaleH            = scaleH;
+    snap.sheetCols         = sheetCols;
+    snap.totalCells        = totalCells;
+
+    if ((int) undoStack.size() >= kMaxUndoLevels)
+        undoStack.erase (undoStack.begin());
+
+    undoStack.push_back (std::move (snap));
+    redoStack.clear();
+}
+
+void ProjectState::clearUndoHistory()
+{
+    undoStack.clear();
+    redoStack.clear();
+}
+
+bool ProjectState::canUndo() const { return ! undoStack.empty(); }
+bool ProjectState::canRedo() const { return ! redoStack.empty(); }
+
+void ProjectState::undo()
+{
+    if (undoStack.empty())
+        return;
+
+    // Save current state to redo stack
+    Snapshot current;
+    current.images            = images;
+    current.currentImageIndex = currentImageIndex;
+    current.cells             = cells;
+    current.scaleW            = scaleW;
+    current.scaleH            = scaleH;
+    current.sheetCols         = sheetCols;
+    current.totalCells        = totalCells;
+    redoStack.push_back (std::move (current));
+
+    // Restore previous state
+    const Snapshot& prev = undoStack.back();
+    images            = prev.images;
+    currentImageIndex = prev.currentImageIndex;
+    cells             = prev.cells;
+    scaleW            = prev.scaleW;
+    scaleH            = prev.scaleH;
+    sheetCols         = prev.sheetCols;
+    totalCells        = prev.totalCells;
+    undoStack.pop_back();
+
+    dirty = true;
+    setStatusText ("Undo  (" + juce::String (undoStack.size()) + " left)");
+}
+
+void ProjectState::redo()
+{
+    if (redoStack.empty())
+        return;
+
+    // Save current state back onto the undo stack
+    Snapshot current;
+    current.images            = images;
+    current.currentImageIndex = currentImageIndex;
+    current.cells             = cells;
+    current.scaleW            = scaleW;
+    current.scaleH            = scaleH;
+    current.sheetCols         = sheetCols;
+    current.totalCells        = totalCells;
+
+    if ((int) undoStack.size() >= kMaxUndoLevels)
+        undoStack.erase (undoStack.begin());
+    undoStack.push_back (std::move (current));
+
+    // Restore next state
+    const Snapshot& next = redoStack.back();
+    images            = next.images;
+    currentImageIndex = next.currentImageIndex;
+    cells             = next.cells;
+    scaleW            = next.scaleW;
+    scaleH            = next.scaleH;
+    sheetCols         = next.sheetCols;
+    totalCells        = next.totalCells;
+    redoStack.pop_back();
+
+    dirty = true;
+    setStatusText ("Redo  (" + juce::String (redoStack.size()) + " left)");
 }
 
 //==============================================================================

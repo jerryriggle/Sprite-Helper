@@ -97,6 +97,8 @@ private:
     void handleSaveImage();
     void handleLoadSpritesheet();
     void handleExport();
+    void handleUndo();
+    void handleRedo();
     void handleScaleFit();
     void handleScaleKeep();
     void handleCenterImage();

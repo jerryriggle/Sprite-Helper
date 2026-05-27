@@ -220,6 +220,9 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             break;
 
         case 2:  // Edit
+            menu.addCommandItem (&commandManager, CommandIDs::undoAction,        "Undo");
+            menu.addCommandItem (&commandManager, CommandIDs::redoAction,        "Redo");
+            menu.addSeparator();
             menu.addCommandItem (&commandManager, CommandIDs::scaleFit,          "Scale (Fit)");
             menu.addCommandItem (&commandManager, CommandIDs::scaleKeep,         "Scale (Keep)");
             menu.addSeparator();
@@ -282,6 +285,8 @@ void MainComponent::getAllCommands (juce::Array<juce::CommandID>& commands)
         CommandIDs::saveImage,
         CommandIDs::loadSpritesheet,
         CommandIDs::exportSpritesheet,
+        CommandIDs::undoAction,
+        CommandIDs::redoAction,
         CommandIDs::scaleFit,
         CommandIDs::scaleKeep,
         CommandIDs::centerImage,
@@ -329,6 +334,17 @@ void MainComponent::getCommandInfo (juce::CommandID id,
         case CommandIDs::exportSpritesheet:
             result.setInfo ("Export...", "Export the spritesheet as PNG", "File", 0);
             result.addDefaultKeypress ('E', juce::ModifierKeys::commandModifier);
+            break;
+        case CommandIDs::undoAction:
+            result.setInfo ("Undo", "Undo the most recent action", "Edit", 0);
+            result.addDefaultKeypress ('Z', juce::ModifierKeys::commandModifier);
+            result.setActive (ps.canUndo());
+            break;
+        case CommandIDs::redoAction:
+            result.setInfo ("Redo", "Redo the most recently undone action", "Edit", 0);
+            result.addDefaultKeypress ('Z', juce::ModifierKeys::commandModifier
+                                            | juce::ModifierKeys::shiftModifier);
+            result.setActive (ps.canRedo());
             break;
         case CommandIDs::scaleFit:
             result.setInfo ("Scale (Fit)", "Scale image to project dimensions (may distort)", "Edit", 0);
@@ -416,6 +432,8 @@ bool MainComponent::perform (const juce::ApplicationCommandTarget::InvocationInf
         case CommandIDs::saveImage:         handleSaveImage();         return true;
         case CommandIDs::loadSpritesheet:   handleLoadSpritesheet();   return true;
         case CommandIDs::exportSpritesheet: handleExport();            return true;
+        case CommandIDs::undoAction:        handleUndo();              return true;
+        case CommandIDs::redoAction:        handleRedo();              return true;
         case CommandIDs::scaleFit:          handleScaleFit();          return true;
         case CommandIDs::scaleKeep:         handleScaleKeep();         return true;
         case CommandIDs::centerImage:       handleCenterImage();       return true;
@@ -547,6 +565,21 @@ void MainComponent::handleExport()
                 ProjectState::getInstance().exportSpritesheet (dest);
             }
         });
+}
+
+//==============================================================================
+// Undo / Redo
+//==============================================================================
+void MainComponent::handleUndo()
+{
+    ProjectState::getInstance().undo();
+    commandManager.commandStatusChanged();   // refresh enabled state of Undo/Redo items
+}
+
+void MainComponent::handleRedo()
+{
+    ProjectState::getInstance().redo();
+    commandManager.commandStatusChanged();
 }
 
 //==============================================================================
