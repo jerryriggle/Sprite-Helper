@@ -48,6 +48,23 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 - **Set Spritesheet Size** — specify **Total Cells** and **Columns**; the number of rows is computed automatically (`ceil(totalCells / columns)`); any incomplete final row is padded with greyed-out cells
 - **Export** — renders the full composite sprite sheet to a PNG file
 - **Load Spritesheet** — imports an existing sheet PNG, partitions it into cells by the current scale settings
+- **Preview Animation** (`Cmd+Shift+P`) — opens a dedicated animation preview dialog (see below)
+
+---
+
+### Animation Preview
+
+**Project → Preview…** (`Cmd+Shift+P`) opens a looping animation player directly from the spritesheet.
+
+| Control | Description |
+|---|---|
+| **All Cells** | Animates every occupied cell in order |
+| **Range** | Animates a contiguous subset — enter the start and end cell index (0-based) |
+| **Interval (s)** | Time between frames, in tenths of a second (e.g. `0.1` = 100 ms, `0.5` = 500 ms) |
+| **Preview / Stop** | Starts or stops the looping animation |
+| **Frame slider** | Tracks the active frame during playback; drag it manually while stopped to scrub through frames |
+
+The preview pane renders each sprite at its natural aspect ratio against a checkerboard background (so transparency is visible). Only occupied cells are included in the animation — empty cells are skipped even when using Range mode.
 
 ---
 
@@ -115,6 +132,7 @@ open build-xcode/SpriteHelper.xcodeproj
 | Rotate Left | Cmd/Ctrl+[ |
 | Rotate Right | Cmd/Ctrl+] |
 | Remove Background | Cmd/Ctrl+Shift+B |
+| Preview Animation | Cmd/Ctrl+Shift+P |
 | Refine view | Cmd/Ctrl+1 |
 | Compile view | Cmd/Ctrl+2 |
 | Split view | Cmd/Ctrl+3 |
@@ -127,15 +145,16 @@ open build-xcode/SpriteHelper.xcodeproj
 sprite-helper-juce/
 ├── CMakeLists.txt              # Build config; JUCE fetched via FetchContent
 ├── Source/
-│   ├── Main.cpp                # JUCEApplication entry point + MainWindow
-│   ├── Commands.h              # CommandID constants
-│   ├── AppSettings.h/.cpp      # Font + dark-mode (PropertiesFile persistence)
-│   ├── ProjectState.h/.cpp     # Data model + ImageOps utilities
-│   ├── CustomLookAndFeel.h/.cpp# Dark / light colour theme (LookAndFeel_V4)
-│   ├── RefineComponent.h/.cpp  # Image editor: canvas, zoom, toolbar
-│   ├── CompileComponent.h/.cpp # Spritesheet grid view
-│   ├── SplitComponent.h/.cpp   # Resizable split view with drag divider
-│   └── MainComponent.h/.cpp    # Menu bar, commands, status bar
+│   ├── Main.cpp                         # JUCEApplication entry point + MainWindow
+│   ├── Commands.h                       # CommandID constants
+│   ├── AppSettings.h/.cpp               # Font + dark-mode (PropertiesFile persistence)
+│   ├── ProjectState.h/.cpp              # Data model + ImageOps utilities
+│   ├── CustomLookAndFeel.h/.cpp         # Dark / light colour theme (LookAndFeel_V4)
+│   ├── RefineComponent.h/.cpp           # Image editor: canvas, zoom, toolbar
+│   ├── CompileComponent.h/.cpp          # Spritesheet grid view
+│   ├── SplitComponent.h/.cpp            # Resizable split view with drag divider
+│   ├── AnimationPreviewComponent.h/.cpp # Animation preview dialog
+│   └── MainComponent.h/.cpp             # Menu bar, commands, status bar
 ├── spec.md                     # Original application specification
 └── BUILD.md                    # Detailed build notes and troubleshooting
 ```

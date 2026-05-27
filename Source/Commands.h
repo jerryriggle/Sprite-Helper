@@ -27,6 +27,7 @@ namespace CommandIDs
     inline constexpr juce::CommandID saveProject       = 0x2032;
     inline constexpr juce::CommandID setScale          = 0x2033;
     inline constexpr juce::CommandID setSpritesheetSize= 0x2034;
+    inline constexpr juce::CommandID previewAnimation  = 0x2035;
 
     // View menu
     inline constexpr juce::CommandID viewRefine        = 0x2040;

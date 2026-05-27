@@ -36,6 +36,7 @@ target_sources(SpriteHelper
         Source/CompileComponent.cpp
         Source/SplitComponent.cpp
         Source/MainComponent.cpp
+        Source/AnimationPreviewComponent.cpp
 )
 
 target_compile_definitions(SpriteHelper

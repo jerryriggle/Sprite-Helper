@@ -239,6 +239,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             menu.addSeparator();
             menu.addCommandItem (&commandManager, CommandIDs::setScale,           "Set Scale...");
             menu.addCommandItem (&commandManager, CommandIDs::setSpritesheetSize, "Set Spritesheet Size...");
+            menu.addSeparator();
+            menu.addCommandItem (&commandManager, CommandIDs::previewAnimation,   "Preview...");
             break;
 
         case 4:  // View
@@ -292,6 +294,7 @@ void MainComponent::getAllCommands (juce::Array<juce::CommandID>& commands)
         CommandIDs::saveProject,
         CommandIDs::setScale,
         CommandIDs::setSpritesheetSize,
+        CommandIDs::previewAnimation,
         CommandIDs::viewRefine,
         CommandIDs::viewCompile,
         CommandIDs::viewSplit,
@@ -376,6 +379,11 @@ void MainComponent::getCommandInfo (juce::CommandID id,
         case CommandIDs::setSpritesheetSize:
             result.setInfo ("Set Spritesheet Size...", "Set the number of cells in the spritesheet", "Project", 0);
             break;
+        case CommandIDs::previewAnimation:
+            result.setInfo ("Preview...", "Preview an animation cycle from the spritesheet", "Project", 0);
+            result.addDefaultKeypress ('P', juce::ModifierKeys::commandModifier
+                                            | juce::ModifierKeys::shiftModifier);
+            break;
         case CommandIDs::viewRefine:
             result.setInfo ("Refine", "Show only the Refine panel", "View", 0);
             result.setTicked (currentView == ViewMode::Refine);
@@ -420,6 +428,7 @@ bool MainComponent::perform (const juce::ApplicationCommandTarget::InvocationInf
         case CommandIDs::saveProject:       handleSaveProject();       return true;
         case CommandIDs::setScale:          handleSetScale();          return true;
         case CommandIDs::setSpritesheetSize:handleSetSpritesheetSize();return true;
+        case CommandIDs::previewAnimation:  handlePreviewAnimation();  return true;
         case CommandIDs::viewRefine:        setViewMode (ViewMode::Refine);   return true;
         case CommandIDs::viewCompile:       setViewMode (ViewMode::Compile);  return true;
         case CommandIDs::viewSplit:         setViewMode (ViewMode::Split);    return true;
@@ -784,6 +793,25 @@ void MainComponent::handleSetSpritesheetSize()
 }
 
 //==============================================================================
+// Animation Preview
+//==============================================================================
+void MainComponent::handlePreviewAnimation()
+{
+    auto* win = new juce::DocumentWindow (
+        "Preview Animation",
+        findColour (juce::ResizableWindow::backgroundColourId),
+        juce::DocumentWindow::closeButton);
+
+    win->setUsingNativeTitleBar (false);
+
+    auto* content = new AnimationPreviewComponent();
+    win->setContentOwned (content, true);
+    win->setResizable (false, false);
+    win->centreAroundComponent (this, win->getWidth(), win->getHeight());
+    win->setVisible (true);
+}
+
+//==============================================================================
 // Settings
 //==============================================================================
 void MainComponent::handleOpenSettings()
@@ -875,6 +903,12 @@ Project
   Set Scale...        Choose the power-of-two width and height for each sprite cell.
   Set Spritesheet Size... Set the total cell count and column count. Rows are computed
                       automatically; any incomplete final row is padded with grey cells.
+  Preview...          Preview an animation cycle from the spritesheet. Choose "All Cells"
+                      to animate every occupied cell, or "Range" to specify a from/to
+                      cell index. Set the per-frame interval (0.1 s granularity). Click
+                      "Preview" to start a looping animation; the slider tracks the
+                      current frame. While stopped, drag the slider to scrub manually.
+                      Click "Stop" (or close the window) to end the animation.
 
 Sprite Helper
   Settings            Change the application font, toggle dark mode, and set the
@@ -889,6 +923,7 @@ KEYBOARD SHORTCUTS
   Cmd+[      Rotate Left  (hold Shift to snap to 45°)
   Cmd+]      Rotate Right (hold Shift to snap to 45°)
   Cmd+⇧+B    Remove Background
+  Cmd+⇧+P    Preview Animation
   Cmd+1      Refine view
   Cmd+2      Compile view
   Cmd+3      Split view

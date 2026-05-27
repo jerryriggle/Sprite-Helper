@@ -7,6 +7,7 @@
 #include "RefineComponent.h"
 #include "CompileComponent.h"
 #include "SplitComponent.h"
+#include "AnimationPreviewComponent.h"
 
 //==============================================================================
 /** Simple status bar component shown at the bottom of the window. */
@@ -108,6 +109,7 @@ private:
     void handleSaveProject();
     void handleSetScale();
     void handleSetSpritesheetSize();
+    void handlePreviewAnimation();
     void handleOpenSettings();
     void handleOpenDocumentation();
     void setViewMode (ViewMode mode);
