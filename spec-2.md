@@ -1,4 +1,0 @@
-Add the following additional feature:
-
-Project
-    Preview -> Preview an animation cycle from the spritesheet.  Selecting this option pops up a dialog to select either: 1. All cells. OR 2. A range of cells.  AND the time interval between the sprites when they are previewed, granular to the tenth of a second.  the dialog also contains a "Preview" button.  clicking the preview button initiates the animation which will loop until the animation is stopped. the dialog also contains a slider that has a detent for each sprite being previewed.  During the animation, the slider will progress and show which cell is being displayed.  while the animation is stopped, the user can drag the slider to manually advance the cells of the animation.  

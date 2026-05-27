@@ -4,6 +4,10 @@ build-*/
 out/
 cmake-build-*/
 
+# -- Spec and Defect directories ------------------------------------------------
+spec/
+defects/
+
 # ── CMake generated files ─────────────────────────────────────────────────────
 CMakeFiles/
 CMakeCache.txt
