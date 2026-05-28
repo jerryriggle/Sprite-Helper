@@ -10,6 +10,9 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 
 **Refine** — Load and edit individual sprite images before they go into the sheet.
 
+<img width="800" height="600" alt="view_3" src="https://github.com/user-attachments/assets/ca2112eb-2597-40a8-9817-664ca5b753e1" />
+
+
 - Zoom in/out on the canvas with a checkerboard transparency background
 - Bullseye overlay to verify subject centering
 - Dimensions display with a live alignment indicator (✓ green / ⚠ orange) relative to the project scale
@@ -35,6 +38,8 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 
 **Split view** — Both panels side-by-side with a draggable divider (default).
 
+<img width="800" height="600" alt="view_1" src="https://github.com/user-attachments/assets/81204bb8-8740-4e68-9435-3c80678d0cf6" />
+
 ---
 
 ### Project Management
@@ -55,6 +60,9 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 ---
 
 ### Animation Preview
+
+<img width="533" height="611" alt="view_2" src="https://github.com/user-attachments/assets/99abfc38-8a27-44e7-b9b6-3430120c8fcd" />
+
 
 **Project → Preview…** (`Cmd+Shift+P`) opens a looping animation player directly from the spritesheet.
 
