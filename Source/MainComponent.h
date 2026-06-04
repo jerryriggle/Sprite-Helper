@@ -8,6 +8,7 @@
 #include "CompileComponent.h"
 #include "SplitComponent.h"
 #include "AnimationPreviewComponent.h"
+#include "CropSpritesheetComponent.h"
 
 //==============================================================================
 /** Simple status bar component shown at the bottom of the window. */
@@ -106,6 +107,7 @@ private:
     void handleRotateLeft();
     void handleRotateRight();
     void handleRemoveBackground();
+    void handleCropSpritesheet();
     void handleOpenProject();
     void handleNewProject();
     void handleSaveProject();

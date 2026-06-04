@@ -233,6 +233,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             menu.addCommandItem (&commandManager, CommandIDs::rotateRight,       "Rotate Right");
             menu.addSeparator();
             menu.addCommandItem (&commandManager, CommandIDs::removeBackground,  "Remove Background");
+            menu.addSeparator();
+            menu.addCommandItem (&commandManager, CommandIDs::cropSpritesheet,   "Crop Spritesheet...");
             break;
 
         case 3:  // Project
@@ -294,6 +296,7 @@ void MainComponent::getAllCommands (juce::Array<juce::CommandID>& commands)
         CommandIDs::rotateLeft,
         CommandIDs::rotateRight,
         CommandIDs::removeBackground,
+        CommandIDs::cropSpritesheet,
         CommandIDs::openProject,
         CommandIDs::newProject,
         CommandIDs::saveProject,
@@ -377,6 +380,10 @@ void MainComponent::getCommandInfo (juce::CommandID id,
             result.addDefaultKeypress ('B', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier);
             result.setActive (hasImage);
             break;
+        case CommandIDs::cropSpritesheet:
+            result.setInfo ("Crop Spritesheet...", "Crop and align the spritesheet to the project grid", "Edit", 0);
+            result.setActive (ps.getNumImages() > 0);
+            break;
         case CommandIDs::openProject:
             result.setInfo ("Open Project...", "Open a saved project", "Project", 0);
             break;
@@ -441,6 +448,7 @@ bool MainComponent::perform (const juce::ApplicationCommandTarget::InvocationInf
         case CommandIDs::rotateLeft:        handleRotateLeft();        return true;
         case CommandIDs::rotateRight:       handleRotateRight();       return true;
         case CommandIDs::removeBackground:  handleRemoveBackground();  return true;
+        case CommandIDs::cropSpritesheet:   handleCropSpritesheet();   return true;
         case CommandIDs::openProject:       handleOpenProject();       return true;
         case CommandIDs::newProject:        handleNewProject();        return true;
         case CommandIDs::saveProject:       handleSaveProject();       return true;
@@ -538,11 +546,46 @@ void MainComponent::handleLoadSpritesheet()
         [this] (const juce::FileChooser& fc)
         {
             auto result = fc.getResult();
-            if (result.existsAsFile())
+            if (! result.existsAsFile())
+                return;
+
+            juce::Image sheet = juce::ImageFileFormat::loadFrom (result);
+            if (! sheet.isValid())
+                return;
+
+            auto& ps = ProjectState::getInstance();
+            int expectedW = ps.getScaleW() * ps.getNumCols();
+            int expectedH = ps.getScaleH() * ps.getNumRows();
+
+            if (sheet.getWidth() != expectedW || sheet.getHeight() != expectedH)
             {
-                ProjectState::getInstance().loadSpritesheetFile (result);
-                setViewMode (ViewMode::Compile);
+                juce::String msg = "The loaded spritesheet ("
+                    + juce::String (sheet.getWidth()) + " x "
+                    + juce::String (sheet.getHeight())
+                    + ") does not match the expected size ("
+                    + juce::String (expectedW) + " x "
+                    + juce::String (expectedH)
+                    + ") based on the current project settings.\n\n"
+                    + "Would you like to scale the spritesheet to match?";
+
+                int choice = juce::AlertWindow::showYesNoCancelBox (
+                    juce::MessageBoxIconType::QuestionIcon,
+                    "Spritesheet Size Mismatch",
+                    msg,
+                    "Scale to Fit",
+                    "Load As-Is",
+                    "Cancel");
+
+                if (choice == 0)   // Cancel
+                    return;
+
+                if (choice == 1)   // Scale to Fit
+                    sheet = ImageOps::scaleFit (sheet, expectedW, expectedH);
+                // choice == 2: Load As-Is — use sheet unchanged
             }
+
+            ps.loadSpritesheetImage (sheet, result);
+            setViewMode (ViewMode::Compile);
         });
 }
 
@@ -680,6 +723,25 @@ void MainComponent::handleRemoveBackground()
         float euclidean = tol * 4.41f;
         ps.removeCurrentImageBackground (euclidean);
     }
+}
+
+//==============================================================================
+// Crop Spritesheet
+//==============================================================================
+void MainComponent::handleCropSpritesheet()
+{
+    auto* win = new juce::DocumentWindow (
+        "Crop Spritesheet",
+        findColour (juce::ResizableWindow::backgroundColourId),
+        juce::DocumentWindow::closeButton);
+
+    win->setUsingNativeTitleBar (false);
+
+    auto* content = new CropSpritesheetComponent (win);
+    win->setContentOwned (content, true);
+    win->setResizable (false, false);
+    win->centreAroundComponent (this, win->getWidth(), win->getHeight());
+    win->setVisible (true);
 }
 
 //==============================================================================
@@ -916,6 +978,9 @@ File
   Load Image          Open an image file (PNG, JPG, BMP, GIF, TIFF, WebP).
   Save Image          Save the current Refine image as PNG.
   Load Spritesheet    Import an existing sprite sheet — partitions it into cells.
+                      If the loaded image size doesn't match the expected sheet
+                      size (scaleW×cols by scaleH×rows), a dialog asks whether
+                      to Scale to Fit, Load As-Is, or Cancel.
   Export              Export the entire sprite sheet as a single PNG.
 
 Edit
@@ -934,6 +999,15 @@ Edit
   Remove Background   Flood-fill from the image corners to remove the background
                       colour, replacing it with transparency. A dialog asks for a
                       tolerance value (0 = exact colour match, 100 = very loose).
+  Crop Spritesheet... Opens an interactive crop tool for the current spritesheet.
+                      The popup shows the full spritesheet with a grid overlay
+                      (dotted lines matching the project's columns and rows) and
+                      a resizable crop rectangle. Drag any of the eight handles
+                      (edges or corners) to reposition the crop region. Click
+                      Accept to scale the cropped area to the project's configured
+                      sheet size and replace the spritesheet data, or Cancel to
+                      close without changes. Available when at least one image is
+                      loaded.
 
 Project
   New Project         Create a new blank project (64 cells, 8 cols, 128×256 px scale).

@@ -54,7 +54,7 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 - **Set Scale** — choose any power-of-two size from 16 to 4096 px; width and height set independently
 - **Set Spritesheet Size** — specify **Total Cells** and **Columns**; the number of rows is computed automatically (`ceil(totalCells / columns)`); any incomplete final row is padded with greyed-out cells
 - **Export** — renders the full composite sprite sheet to a PNG file
-- **Load Spritesheet** — imports an existing sheet PNG, partitions it into cells by the current scale settings
+- **Load Spritesheet** — imports an existing sheet PNG, partitions it into cells by the current scale settings. If the loaded image dimensions don't match the expected sheet size (`scaleW × cols` × `scaleH × rows`), a dialog prompts to **Scale to Fit** (stretch to match), **Load As-Is** (keep original dimensions), or **Cancel**
 - **Preview Animation** (`Cmd+Shift+P`) — opens a dedicated animation preview dialog (see below)
 
 ---
@@ -75,6 +75,22 @@ A C++20 desktop application built with the [JUCE framework](https://juce.com/) t
 | **Frame slider** | Tracks the active frame during playback; drag it manually while stopped to scrub through frames |
 
 The preview pane renders each sprite at its natural aspect ratio against a checkerboard background (so transparency is visible). Only occupied cells are included in the animation — empty cells are skipped even when using Range mode.
+
+---
+
+### Crop Spritesheet
+
+**Edit → Crop Spritesheet…** opens an interactive crop tool for re-aligning or re-cropping an existing spritesheet to the project grid.
+
+The popup shows the full composite spritesheet with:
+
+- A **dotted-line grid overlay** matching the project's column and row configuration
+- A **crop rectangle** (initially covering the full image) with **eight grab handles** — one on each edge and one at each corner
+- A **dark mask** over the regions outside the crop rectangle so the selection is immediately clear
+
+Drag any handle to resize the crop region. The grid stays locked inside the crop rectangle so you can align the cell boundaries precisely. Once satisfied, click **Accept** — the selected region is scaled to match the project's configured sheet size (`scaleW × cols` × `scaleH × rows`) and replaces the current spritesheet data. Click **Cancel** to close without making changes.
+
+The command is available in the Edit menu whenever the project has at least one loaded image.
 
 ---
 
@@ -166,6 +182,7 @@ sprite-helper-juce/
 │   ├── CompileComponent.h/.cpp          # Spritesheet grid view
 │   ├── SplitComponent.h/.cpp            # Resizable split view with drag divider
 │   ├── AnimationPreviewComponent.h/.cpp # Animation preview dialog
+│   ├── CropSpritesheetComponent.h/.cpp  # Interactive spritesheet crop tool
 │   └── MainComponent.h/.cpp             # Menu bar, commands, status bar
 ├── spec.md                     # Original application specification
 └── BUILD.md                    # Detailed build notes and troubleshooting

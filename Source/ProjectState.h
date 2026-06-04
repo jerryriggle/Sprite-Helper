@@ -109,6 +109,11 @@ public:
     bool exportSpritesheet (const juce::File& destFile);
     bool loadSpritesheetFile (const juce::File& file);
 
+    /** Load a spritesheet from a pre-loaded (possibly scaled) image.
+        @param sheet       The image to slice into cells.
+        @param sourceFile  Recorded as the source file in each ImageEntry. */
+    bool loadSpritesheetImage (const juce::Image& sheet, const juce::File& sourceFile);
+
     /** Returns a composite spritesheet image (used in export and compile view). */
     juce::Image buildSpritesheetImage() const;
 

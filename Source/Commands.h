@@ -20,6 +20,7 @@ namespace CommandIDs
     inline constexpr juce::CommandID rotateLeft        = 0x2024;
     inline constexpr juce::CommandID rotateRight       = 0x2025;
     inline constexpr juce::CommandID removeBackground  = 0x2026;
+    inline constexpr juce::CommandID cropSpritesheet  = 0x2027;
 
     // Project menu
     inline constexpr juce::CommandID openProject       = 0x2030;

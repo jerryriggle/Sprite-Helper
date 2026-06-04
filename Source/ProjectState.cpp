@@ -528,6 +528,15 @@ bool ProjectState::loadSpritesheetFile (const juce::File& file)
     if (! sheet.isValid())
         return false;
 
+    return loadSpritesheetImage (sheet, file);
+}
+
+bool ProjectState::loadSpritesheetImage (const juce::Image& sheet,
+                                         const juce::File& sourceFile)
+{
+    if (! sheet.isValid())
+        return false;
+
     pushSnapshot();
 
     images.clear();
@@ -549,10 +558,10 @@ bool ProjectState::loadSpritesheetFile (const juce::File& file)
             juce::Rectangle<int> (x, y, scaleW, scaleH));
 
         ImageEntry entry;
-        entry.file        = file;
-        entry.image       = cellImg.createCopy();
-        entry.isApplied   = true;
-        entry.cellIndex   = i;
+        entry.file         = sourceFile;
+        entry.image        = cellImg.createCopy();
+        entry.isApplied    = true;
+        entry.cellIndex    = i;
         entry.appliedImage = entry.image;
 
         int imgIdx = images.size();
@@ -562,7 +571,7 @@ bool ProjectState::loadSpritesheetFile (const juce::File& file)
 
     currentImageIndex = images.isEmpty() ? -1 : 0;
     dirty = true;
-    setStatusText ("Loaded spritesheet: " + file.getFileName());
+    setStatusText ("Loaded spritesheet: " + sourceFile.getFileName());
     sendChangeMessage();
     return true;
 }
