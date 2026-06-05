@@ -249,16 +249,10 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             break;
 
         case 4:  // View
-        {
-            bool isRefine  = (currentView == ViewMode::Refine);
-            bool isCompile = (currentView == ViewMode::Compile);
-            bool isSplit   = (currentView == ViewMode::Split);
-
             menu.addCommandItem (&commandManager, CommandIDs::viewRefine,  "Refine");
             menu.addCommandItem (&commandManager, CommandIDs::viewCompile, "Compile");
             menu.addCommandItem (&commandManager, CommandIDs::viewSplit,   "Split");
             break;
-        }
 
         case 5:  // Help
             menu.addCommandItem (&commandManager, CommandIDs::openDocumentation, "Documentation...");

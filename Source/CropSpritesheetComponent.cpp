@@ -79,7 +79,7 @@ CropSpritesheetComponent::displayToImage (juce::Point<float> pt) const
 {
     auto  r = imageDisplayRect();
     float s = displayScale();
-    if (s == 0.0f) return {};
+    if (s < 1e-6f) return {};
     return { (pt.x - r.getX()) / s, (pt.y - r.getY()) / s };
 }
 
@@ -116,7 +116,7 @@ CropSpritesheetComponent::handleCentre (Handle h) const
 }
 
 CropSpritesheetComponent::Handle
-CropSpritesheetComponent::hitTest (juce::Point<float> pt) const
+CropSpritesheetComponent::hitTestHandle (juce::Point<float> pt) const
 {
     for (auto h : kAllHandles)
     {
@@ -237,7 +237,7 @@ void CropSpritesheetComponent::resized()
 void CropSpritesheetComponent::mouseDown (const juce::MouseEvent& e)
 {
     auto pt = e.getPosition().toFloat();
-    activeHandle     = hitTest (pt);
+    activeHandle     = hitTestHandle (pt);
     dragStartDisplay = pt;
     cropAtDragStart  = cropRect;
 }
@@ -248,7 +248,7 @@ void CropSpritesheetComponent::mouseDrag (const juce::MouseEvent& e)
         return;
 
     float s = displayScale();
-    if (s == 0.0f) return;
+    if (s < 1e-6f) return;
 
     auto pt = e.getPosition().toFloat();
 
@@ -309,7 +309,7 @@ void CropSpritesheetComponent::mouseDrag (const juce::MouseEvent& e)
 
 void CropSpritesheetComponent::mouseMove (const juce::MouseEvent& e)
 {
-    setMouseCursor (cursorForHandle (hitTest (e.getPosition().toFloat())));
+    setMouseCursor (cursorForHandle (hitTestHandle (e.getPosition().toFloat())));
 }
 
 void CropSpritesheetComponent::mouseUp (const juce::MouseEvent&)

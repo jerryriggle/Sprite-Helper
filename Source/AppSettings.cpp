@@ -24,7 +24,7 @@ void AppSettings::initialise()
 
     auto* props = appProperties->getUserSettings();
 
-    fontName     = props->getValue (kFontNameKey, juce::Font().getTypefaceName());
+    fontName     = props->getValue (kFontNameKey, juce::Font (juce::FontOptions{}).getTypefaceName());
     fontSize     = (float) props->getDoubleValue (kFontSizeKey, 14.0);
     darkMode     = props->getBoolValue (kDarkModeKey, false);
     rotationStep = (float) props->getDoubleValue (kRotationStepKey, 5.0);

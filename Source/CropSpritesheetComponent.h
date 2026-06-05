@@ -82,7 +82,7 @@ private:
     // Handle helpers
 
     juce::Point<float>   handleCentre     (Handle h) const; ///< display coords
-    Handle               hitTest          (juce::Point<float> displayPt) const;
+    Handle               hitTestHandle    (juce::Point<float> displayPt) const;
     juce::MouseCursor    cursorForHandle  (Handle h) const;
 
     //==========================================================================

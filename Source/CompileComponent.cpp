@@ -198,8 +198,7 @@ void CompileComponent::paintDragGhost (juce::Graphics& g)
 
     g.setOpacity (0.7f);
     g.drawImage (entry.image,
-                 (float) ghostX, (float) ghostY,
-                 (float) ghostW, (float) ghostH,
+                 ghostX, ghostY, ghostW, ghostH,
                  0, 0, entry.image.getWidth(), entry.image.getHeight());
     g.setOpacity (1.0f);
 
@@ -209,9 +208,7 @@ void CompileComponent::paintDragGhost (juce::Graphics& g)
 
 void CompileComponent::paint (juce::Graphics& g)
 {
-    auto& ps   = ProjectState::getInstance();
-    int   cols = ps.getNumCols();
-    int   rows = ps.getNumRows();
+    auto& ps = ProjectState::getInstance();
 
     g.fillAll (findColour (juce::ResizableWindow::backgroundColourId));
 
@@ -266,7 +263,6 @@ void CompileComponent::mouseUp (const juce::MouseEvent& e)
         if (targetCell >= 0 && targetCell != dragSourceCell)
         {
             auto& ps = ProjectState::getInstance();
-            int srcImg = ps.getCellImageIndex (dragSourceCell);
             int dstImg = ps.getCellImageIndex (targetCell);
 
             if (dstImg == -1)

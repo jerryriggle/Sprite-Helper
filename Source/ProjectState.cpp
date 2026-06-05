@@ -839,9 +839,9 @@ namespace ImageOps
         };
 
         // Stack-based flood fill from all four corners
-        std::vector<bool> visited (W * H, false);
+        std::vector<bool> visited ((size_t) (W * H), false);
         std::vector<juce::Point<int>> stack;
-        stack.reserve (W * H / 4);
+        stack.reserve ((size_t) (W * H / 4));
 
         auto push = [&] (int x, int y)
         {
@@ -863,9 +863,9 @@ namespace ImageOps
             int y   = pt.y;
             int idx = y * W + x;
 
-            if (visited[idx])
+            if (visited[(size_t) idx])
                 continue;
-            visited[idx] = true;
+            visited[(size_t) idx] = true;
 
             juce::Colour px = src.getPixelAt (x, y);
             if (colorDist (px, bgColor) <= tolerance)

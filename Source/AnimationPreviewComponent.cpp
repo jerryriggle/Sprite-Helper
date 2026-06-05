@@ -120,8 +120,8 @@ void AnimationPreviewComponent::paint (juce::Graphics& g)
             float scaleY = destF.getHeight() / (float) img.getHeight();
             float scale  = juce::jmin (scaleX, scaleY);
 
-            float dw = img.getWidth()  * scale;
-            float dh = img.getHeight() * scale;
+            float dw = (float) img.getWidth()  * scale;
+            float dh = (float) img.getHeight() * scale;
             auto dest = juce::Rectangle<float> (
                 destF.getCentreX() - dw * 0.5f,
                 destF.getCentreY() - dh * 0.5f,
